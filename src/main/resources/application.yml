@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: taskmanagerauth
+  datasource:
+    url: jdbc:postgresql://localhost:5432/authdb
+    username: admin
+    password: admin
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create
+
+# Logging
+logging:
+  level:
+    root: "DEBUG"
+  file:
+    name: "logs/application.log"
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%t] %p %c{36} - %m%n"
+
+server:
+  port: 9095
+  servlet:
+    context-path: "/api"
+
+jwt:
+  secret: "TESTTESTTEST"
