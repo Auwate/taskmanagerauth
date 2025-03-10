@@ -62,5 +62,5 @@ jobs:
           -e ORACLE_DB_CONNECTION_STRING="${{ secrets.ORACLE_DB_CONNECTION_STRING }}" \
           -e ORACLE_DB_USER="${{ secrets.ORACLE_DB_USER }}" \
           -e ORACLE_DB_PASSWORD="${{ secrets.ORACLE_DB_PASSWORD }}" \
-          -e JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
           "${{ secrets.DOCKER_HUB_USER }}"/taskmanagerauth:latest
