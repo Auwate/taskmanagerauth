@@ -15,10 +15,6 @@ public class User {
     private Long id;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "createdAt")
-    private LocalDateTime createdAt;
-
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "lastAccessedAt")
     private LocalDateTime lastAccessedAt;
 
@@ -50,14 +46,6 @@ public class User {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 
     public LocalDateTime getLastAccessedAt() {

@@ -2,18 +2,19 @@ spring:
   application:
     name: taskmanagerauth
   datasource:
-    url: jdbc:postgresql://localhost:5432/authdb
-    username: admin
-    password: admin
+    url: jdbc:oracle:thin:@${ORACLE_DB_CONNECTION_STRING}
+    username: ${ORACLE_DB_USER}
+    password: ${ORACLE_DB_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.OracleDialect
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
 
 # Logging
 logging:
   level:
-    root: "DEBUG"
+    root: "INFO"
   file:
     name: "logs/application.log"
   pattern:
@@ -25,4 +26,4 @@ server:
     context-path: "/api"
 
 jwt:
-  secret: "TESTTESTTEST"
+  secret: ${JWT_SECRET}
