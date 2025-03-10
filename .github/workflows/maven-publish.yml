@@ -1,0 +1,66 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: CI/CD w/ Maven, Docker Hub
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn -B clean verify
+
+  docker-build-push:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Log into Docker Hub
+      run: echo "${{ secrets.DOCKER_HUB_PASS }}" | docker login -u "${{ secrets.DOCKER_HUB_USER }}" --password-stdin
+
+    - name: Build, tag, and push
+      run: |
+        docker build -t "${{ secrets.DOCKER_HUB_USER }}"/taskmanagerauth:latest .
+        docker push "${{ secrets.DOCKER_HUB_USER }}"/taskmanagerauth:latest
+
+  oracle-vm:
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.ORACLE_HOST }}
+        username: ${{ secrets.ORACLE_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: 22
+        script: |
+          sudo docker stop taskmanagerauth || true
+          sudo docker rm taskmanagerauth || true
+          sudo docker pull "${{ secrets.DOCKER_HUB_USER }}"/taskmanagerauth:latest
+          sudo docker run -d --name taskmanagerauth -p 9095:9095 \
+          -e ORACLE_DB_CONNECTION_STRING="${{ secrets.ORACLE_DB_CONNECTION_STRING }}" \
+          -e ORACLE_DB_USER="${{ secrets.ORACLE_DB_USER }}" \
+          -e ORACLE_DB_PASSWORD="${{ secrets.ORACLE_DB_PASSWORD }}" \
+          -e JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          "${{ secrets.DOCKER_HUB_USER }}"/taskmanager:latest
