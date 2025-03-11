@@ -13,16 +13,20 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
-    private String secret;
+    public JwtUtil(@Value("${jwt.secret}") String secret) {
+        this.secret = secret;
+    }
 
-    private static final long EXPIRATION_TIMER = 60 * 10; // 10 minutes
+    private final String secret;
+
+    private static final long EXPIRATION_TIMER = Duration.ofMinutes(10).toMillis(); // 10 minutes
 
     public String generateToken(UserDetails userDetails) {
         Algorithm algorithm = Algorithm.HMAC512(secret);
@@ -30,7 +34,7 @@ public class JwtUtil {
                 .withSubject(userDetails.getUsername())
                 .withClaim("authorities", userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIMER * 1000))
+                .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIMER))
                 .sign(algorithm);
     }
 

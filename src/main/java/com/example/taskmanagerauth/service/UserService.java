@@ -4,8 +4,8 @@ import com.example.taskmanagerauth.entity.Role;
 import com.example.taskmanagerauth.entity.User;
 import com.example.taskmanagerauth.exception.server.InvalidCredentialsException;
 import com.example.taskmanagerauth.exception.server.UsernameTakenException;
-import com.example.taskmanagerauth.repository.RoleRepository;
 import com.example.taskmanagerauth.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +23,13 @@ import java.util.List;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncodingService passwordEncoder;
 
     @Autowired
     public UserService(
             UserRepository userRepository,
-            RoleRepository roleRepository,
             PasswordEncodingService passwordEncoder) {
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -93,6 +90,7 @@ public class UserService implements UserDetailsService {
                 .toList();
     }
 
+    @Transactional
     public void registerUser(User user) {
 
         if (logger.isDebugEnabled()) {

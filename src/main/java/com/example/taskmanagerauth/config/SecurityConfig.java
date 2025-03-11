@@ -41,7 +41,6 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, permitAllPaths.toArray(new String[0])).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/test").hasAuthority("ADMIN")
                         .anyRequest().authenticated()
                 );
         http.authenticationProvider(daoAuthenticationProvider());

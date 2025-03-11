@@ -24,12 +24,29 @@ import java.util.List;
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
-    private UserService userService;
+    public JwtRequestFilter(
+            UserService userService,
+            JwtUtil jwtUtil
+    ) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+        this.exceptionManager = new FilterExceptionManager();
+    }
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    public JwtRequestFilter(
+            UserService userService,
+            JwtUtil jwtUtil,
+            FilterExceptionManager filterExceptionManager
+    ) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+        this.exceptionManager = filterExceptionManager;
+    }
 
-    private static final FilterExceptionManager exceptionManager = new FilterExceptionManager();
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+
+    private final FilterExceptionManager exceptionManager;
 
     @Override
     protected void doFilterInternal(
@@ -67,6 +84,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             if (jwtUtil.validateToken(jwt)) {
                 authorities = jwtUtil.extractAuthorities(jwt);
                 username = jwtUtil.extractUsername(jwt);
+            } else {
+                throw new InvalidJwtException("Invalid access token.");
             }
 
         } catch (IndexOutOfBoundsException exception) {
@@ -81,7 +100,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         } catch (InvalidJwtException exception) {
 
             exceptionManager.handleInvalidJwtException(
-                    new InvalidJwtException("Access token not provided."),
+                    new InvalidJwtException("Access token is not valid."),
                     response
             );
 
