@@ -24,11 +24,6 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @PostMapping("/auth/test")
-    public ResponseEntity<ApiResponse<Void>> test() {
-        return ResponseEntity.status(200).body(ApiResponse.of(200, "Success", null));
-    }
-
     @PostMapping("/auth/register")
     public ResponseEntity<ApiResponse<Void>> register(@RequestBody User user) {
 
@@ -40,7 +35,13 @@ public class UserController {
 
         userService.registerUser(user);
 
-        return ResponseEntity.status(200).body(ApiResponse.of(200, "Success", null));
+        ApiResponse<Void> response = ApiResponse.of(
+                HttpStatus.OK.value(),
+                "Success",
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }
 
@@ -54,7 +55,7 @@ public class UserController {
         logger.info("POST HTTP request received at /api/auth/login");
 
         ApiResponse<String> response = ApiResponse.of(
-                200,
+                HttpStatus.OK.value(),
                 "Success",
                 jwtUtil.generateToken(userService.loadUserByUsernamePassword(user.getUsername(), user.getPassword()))
         );
