@@ -3,8 +3,6 @@ package com.example.taskmanagerauth.unit.config;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.example.taskmanagerauth.config.JwtRequestFilter;
-import com.example.taskmanagerauth.config.SecurityConfig;
-import com.example.taskmanagerauth.entity.Role;
 import com.example.taskmanagerauth.exception.handler.FilterExceptionManager;
 import com.example.taskmanagerauth.exception.server.InvalidJwtException;
 import com.example.taskmanagerauth.exception.server.JwtNotProvidedException;
