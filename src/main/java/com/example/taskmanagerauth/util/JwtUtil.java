@@ -38,7 +38,7 @@ public class JwtUtil {
                 .sign(algorithm);
     }
 
-    public String extractUsername(String token) {
+    public String extractID(String token) {
         try {
             DecodedJWT jwt = JWT.decode(token);
             return jwt.getSubject();

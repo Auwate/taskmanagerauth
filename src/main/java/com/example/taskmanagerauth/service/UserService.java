@@ -47,7 +47,7 @@ public class UserService implements UserDetailsService {
         );
 
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
+                String.valueOf(user.getId()), // Use the immutable ID instead of username
                 user.getPassword(),
                 mapRolesToAuthorities(user.getRoles())
         );
