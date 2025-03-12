@@ -110,7 +110,7 @@ public class UserControllerIT {
         String testJWT = response.getBody().getData();
         jwtUtil.validateToken(testJWT);
 
-        assertEquals("test_user", jwtUtil.extractUsername(testJWT));
+        assertEquals("1", jwtUtil.extractID(testJWT));
         assertEquals("USER", jwtUtil.extractAuthorities(testJWT).getFirst());
 
     }

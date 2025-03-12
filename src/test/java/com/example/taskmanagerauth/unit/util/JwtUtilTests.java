@@ -25,7 +25,7 @@ public class JwtUtilTests {
         this.jwtUtil = new JwtUtil("Test");
 
         this.userDetails = new User(
-                "Test user",
+                "Test id", // <- ID's are used instead of usernames
                 "Test pass",
                 Stream.of("USER").map(SimpleGrantedAuthority::new).toList()
         );
@@ -47,7 +47,7 @@ public class JwtUtilTests {
 
         // Assertions
         assertTrue(jwt.getExpiresAt().getTime() - jwt.getIssuedAt().getTime() > Duration.ofMinutes(9).toMillis());
-        assertEquals("Test user", jwt.getSubject());
+        assertEquals("Test id", jwt.getSubject());
         assertEquals("USER", jwt.getClaim("authorities").asList(String.class).getFirst());
 
     }
@@ -103,12 +103,12 @@ public class JwtUtilTests {
      * Test that JwtUtil can successfully extract the username
      */
     @Test
-    void testExtractUsername() {
+    void testExtractID() {
 
         String testJWT = jwtUtil.generateToken(userDetails);
 
         // Assertions
-        assertEquals("Test user", jwtUtil.extractUsername(testJWT));
+        assertEquals("Test id", jwtUtil.extractID(testJWT));
 
     }
 

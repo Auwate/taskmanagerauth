@@ -83,7 +83,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             if (jwtUtil.validateToken(jwt)) {
                 authorities = jwtUtil.extractAuthorities(jwt);
-                username = jwtUtil.extractUsername(jwt);
+                username = jwtUtil.extractID(jwt);
             } else {
                 throw new InvalidJwtException("Invalid access token.");
             }
