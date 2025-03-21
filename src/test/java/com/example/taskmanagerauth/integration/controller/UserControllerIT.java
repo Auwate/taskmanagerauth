@@ -29,29 +29,25 @@ public class UserControllerIT {
     public UserControllerIT(
             TestRestTemplate testRestTemplate,
             UserRepository userRepository,
-            PasswordEncodingService passwordEncodingService
+            PasswordEncodingService passwordEncodingService,
+            JwtService jwtService
     ) {
         this.testRestTemplate = testRestTemplate;
         this.userRepository = userRepository;
         this.passwordEncodingService = passwordEncodingService;
+        this.jwtService = jwtService;
     }
 
     private final TestRestTemplate testRestTemplate;
     private final UserRepository userRepository;
     private final PasswordEncodingService passwordEncodingService;
-
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
     private static final String LOGIN_QUERY_URL = "/auth/login";
     private static final String REGISTER_QUERY_URL = "/auth/register";
 
     <T> HttpEntity<T> HttpEntityFactory(T data) {
         return new HttpEntity<>(data);
-    }
-
-    @BeforeEach
-    void setUp() {
-        this.jwtService = new JwtService(jwtService.getSecret());
     }
 
     @Test
