@@ -51,7 +51,7 @@ public class UserControllerIT {
 
     @BeforeEach
     void setUp() {
-        this.jwtService = new JwtService("Test");
+        this.jwtService = new JwtService(jwtService.getSecret());
     }
 
     @Test
