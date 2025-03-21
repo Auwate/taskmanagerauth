@@ -5,7 +5,7 @@ import com.example.taskmanagerauth.entity.Role;
 import com.example.taskmanagerauth.entity.User;
 import com.example.taskmanagerauth.repository.UserRepository;
 import com.example.taskmanagerauth.service.PasswordEncodingService;
-import com.example.taskmanagerauth.util.JwtUtil;
+import com.example.taskmanagerauth.service.JwtService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,29 +29,25 @@ public class UserControllerIT {
     public UserControllerIT(
             TestRestTemplate testRestTemplate,
             UserRepository userRepository,
-            PasswordEncodingService passwordEncodingService
+            PasswordEncodingService passwordEncodingService,
+            JwtService jwtService
     ) {
         this.testRestTemplate = testRestTemplate;
         this.userRepository = userRepository;
         this.passwordEncodingService = passwordEncodingService;
+        this.jwtService = jwtService;
     }
 
     private final TestRestTemplate testRestTemplate;
     private final UserRepository userRepository;
     private final PasswordEncodingService passwordEncodingService;
-
-    private JwtUtil jwtUtil;
+    private final JwtService jwtService;
 
     private static final String LOGIN_QUERY_URL = "/auth/login";
     private static final String REGISTER_QUERY_URL = "/auth/register";
 
     <T> HttpEntity<T> HttpEntityFactory(T data) {
         return new HttpEntity<>(data);
-    }
-
-    @BeforeEach
-    void setUp() {
-        this.jwtUtil = new JwtUtil("Test");
     }
 
     @Test
@@ -107,11 +103,15 @@ public class UserControllerIT {
         assertEquals("Success", response.getBody().getMessage());
         assertEquals(HttpStatus.OK.value(), response.getBody().getStatus());
 
-        String testJWT = response.getBody().getData();
-        jwtUtil.validateToken(testJWT);
+        String testJWT = response.getHeaders().getFirst("Set-Cookie");
+        assertNotNull(testJWT);
 
-        assertEquals("1", jwtUtil.extractID(testJWT));
-        assertEquals("USER", jwtUtil.extractAuthorities(testJWT).getFirst());
+        testJWT = testJWT.substring(testJWT.indexOf("=") + 1, testJWT.indexOf(";"));
+
+        jwtService.validateToken(testJWT);
+
+        assertEquals("1", jwtService.extractID(testJWT));
+        assertEquals("USER", jwtService.extractAuthorities(testJWT).getFirst());
 
     }
 

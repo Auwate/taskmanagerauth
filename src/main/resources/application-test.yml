@@ -28,3 +28,6 @@ server:
 
 jwt:
   secret: "Test"
+
+frontend:
+  location: "http://localhost:3000"

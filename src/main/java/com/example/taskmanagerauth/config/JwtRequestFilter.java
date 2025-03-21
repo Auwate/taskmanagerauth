@@ -4,7 +4,7 @@ import com.example.taskmanagerauth.exception.handler.FilterExceptionManager;
 import com.example.taskmanagerauth.exception.server.InvalidJwtException;
 import com.example.taskmanagerauth.exception.server.JwtNotProvidedException;
 import com.example.taskmanagerauth.service.UserService;
-import com.example.taskmanagerauth.util.JwtUtil;
+import com.example.taskmanagerauth.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,25 +26,25 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     public JwtRequestFilter(
             UserService userService,
-            JwtUtil jwtUtil
+            JwtService jwtService
     ) {
         this.userService = userService;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
         this.exceptionManager = new FilterExceptionManager();
     }
 
     public JwtRequestFilter(
             UserService userService,
-            JwtUtil jwtUtil,
+            JwtService jwtService,
             FilterExceptionManager filterExceptionManager
     ) {
         this.userService = userService;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
         this.exceptionManager = filterExceptionManager;
     }
 
     private final UserService userService;
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
 
     private final FilterExceptionManager exceptionManager;
 
@@ -81,9 +81,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             jwt = authorizationHeader.substring(7);
 
-            if (jwtUtil.validateToken(jwt)) {
-                authorities = jwtUtil.extractAuthorities(jwt);
-                username = jwtUtil.extractID(jwt);
+            if (jwtService.validateToken(jwt)) {
+                authorities = jwtService.extractAuthorities(jwt);
+                username = jwtService.extractID(jwt);
             } else {
                 throw new InvalidJwtException("Invalid access token.");
             }

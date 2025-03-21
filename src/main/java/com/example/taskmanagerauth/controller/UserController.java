@@ -3,7 +3,8 @@ package com.example.taskmanagerauth.controller;
 import com.example.taskmanagerauth.dto.ApiResponse;
 import com.example.taskmanagerauth.entity.User;
 import com.example.taskmanagerauth.service.UserService;
-import com.example.taskmanagerauth.util.JwtUtil;
+import com.example.taskmanagerauth.service.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
 
     @PostMapping("/auth/register")
     public ResponseEntity<ApiResponse<Void>> register(@RequestBody User user) {
@@ -46,7 +47,10 @@ public class UserController {
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<ApiResponse<String>> authenticate(@RequestBody User user) {
+    public ResponseEntity<ApiResponse<Void>> authenticate(
+            @RequestBody User user,
+            HttpServletResponse httpServletResponse
+    ) {
 
         if (logger.isDebugEnabled()) {
             logger.debug("Attempting to authenticate...");
@@ -54,10 +58,18 @@ public class UserController {
 
         logger.info("POST HTTP request received at /api/auth/login");
 
-        ApiResponse<String> response = ApiResponse.of(
+        httpServletResponse.addCookie(
+            jwtService.generateJwtCookie(
+                userService.loadUserByUsernamePassword(
+                    user.getUsername(), user.getPassword()
+                )
+            )
+        );
+
+        ApiResponse<Void> response = ApiResponse.of(
                 HttpStatus.OK.value(),
                 "Success",
-                jwtUtil.generateToken(userService.loadUserByUsernamePassword(user.getUsername(), user.getPassword()))
+                null
         );
 
         return ResponseEntity.status(HttpStatus.OK).body(response);

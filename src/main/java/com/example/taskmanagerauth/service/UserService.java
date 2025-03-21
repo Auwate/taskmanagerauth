@@ -5,6 +5,7 @@ import com.example.taskmanagerauth.entity.User;
 import com.example.taskmanagerauth.exception.server.InvalidCredentialsException;
 import com.example.taskmanagerauth.exception.server.UsernameTakenException;
 import com.example.taskmanagerauth.repository.UserRepository;
+import com.example.taskmanagerauth.service.JwtService;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +25,17 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncodingService passwordEncoder;
+    private final JwtService jwtService;
 
     @Autowired
     public UserService(
             UserRepository userRepository,
-            PasswordEncodingService passwordEncoder) {
+            PasswordEncodingService passwordEncoder,
+            JwtService jwtService
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);

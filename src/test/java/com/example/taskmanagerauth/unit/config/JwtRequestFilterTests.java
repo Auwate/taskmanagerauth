@@ -7,7 +7,7 @@ import com.example.taskmanagerauth.exception.handler.FilterExceptionManager;
 import com.example.taskmanagerauth.exception.server.InvalidJwtException;
 import com.example.taskmanagerauth.exception.server.JwtNotProvidedException;
 import com.example.taskmanagerauth.service.UserService;
-import com.example.taskmanagerauth.util.JwtUtil;
+import com.example.taskmanagerauth.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,8 +50,8 @@ public class JwtRequestFilterTests {
 
     @BeforeEach
     void setUp() {
-        JwtUtil jwtUtil = new JwtUtil("Test");
-        this.jwtRequestFilter = new JwtRequestFilter(userService, jwtUtil, filterExceptionManager);
+        JwtService jwtService = new JwtService("Test");
+        this.jwtRequestFilter = new JwtRequestFilter(userService, jwtService, filterExceptionManager);
     }
 
     /**
