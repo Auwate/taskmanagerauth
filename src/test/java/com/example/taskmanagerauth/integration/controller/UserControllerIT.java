@@ -5,7 +5,7 @@ import com.example.taskmanagerauth.entity.Role;
 import com.example.taskmanagerauth.entity.User;
 import com.example.taskmanagerauth.repository.UserRepository;
 import com.example.taskmanagerauth.service.PasswordEncodingService;
-import com.example.taskmanagerauth.util.JwtUtil;
+import com.example.taskmanagerauth.service.JwtService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ public class UserControllerIT {
     private final UserRepository userRepository;
     private final PasswordEncodingService passwordEncodingService;
 
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
 
     private static final String LOGIN_QUERY_URL = "/auth/login";
     private static final String REGISTER_QUERY_URL = "/auth/register";
@@ -51,7 +51,7 @@ public class UserControllerIT {
 
     @BeforeEach
     void setUp() {
-        this.jwtUtil = new JwtUtil("Test");
+        this.jwtService = new JwtService("Test");
     }
 
     @Test
@@ -108,10 +108,10 @@ public class UserControllerIT {
         assertEquals(HttpStatus.OK.value(), response.getBody().getStatus());
 
         String testJWT = response.getBody().getData();
-        jwtUtil.validateToken(testJWT);
+        jwtService.validateToken(testJWT);
 
-        assertEquals("1", jwtUtil.extractID(testJWT));
-        assertEquals("USER", jwtUtil.extractAuthorities(testJWT).getFirst());
+        assertEquals("1", jwtService.extractID(testJWT));
+        assertEquals("USER", jwtService.extractAuthorities(testJWT).getFirst());
 
     }
 

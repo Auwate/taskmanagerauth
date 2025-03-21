@@ -1,10 +1,10 @@
-package com.example.taskmanagerauth.unit.util;
+package com.example.taskmanagerauth.unit.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.taskmanagerauth.exception.server.InvalidJwtException;
-import com.example.taskmanagerauth.util.JwtUtil;
+import com.example.taskmanagerauth.service.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,12 +17,12 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class JwtUtilTests {
+public class JwtServiceTests {
 
     @BeforeEach
     void setUp() {
 
-        this.jwtUtil = new JwtUtil("Test");
+        this.jwtService = new JwtService("Test");
 
         this.userDetails = new User(
                 "Test id", // <- ID's are used instead of usernames
@@ -32,16 +32,16 @@ public class JwtUtilTests {
 
     }
 
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
     private UserDetails userDetails;
 
     /**
-     * Test that JwtUtil correctly generates a valid JWT with at least 9 minutes of activity
+     * Test that JwtService correctly generates a valid JWT with at least 9 minutes of activity
      */
     @Test
     void testGenerate() {
 
-        String testJWT = jwtUtil.generateToken(userDetails);
+        String testJWT = jwtService.generateToken(userDetails);
 
         DecodedJWT jwt = JWT.decode(testJWT);
 
@@ -53,20 +53,20 @@ public class JwtUtilTests {
     }
 
     /**
-     * Test that JwtUtil correctly validates that a JWT is not expired
+     * Test that JwtService correctly validates that a JWT is not expired
      */
     @Test
     void testValidate() {
 
-        String testJWT = jwtUtil.generateToken(userDetails);
+        String testJWT = jwtService.generateToken(userDetails);
 
         // Assertions
-        assertTrue(jwtUtil.validateToken(testJWT));
+        assertTrue(jwtService.validateToken(testJWT));
 
     }
 
     /**
-     * Test that JwtUtil correctly throws an exception with an expired JWT
+     * Test that JwtService correctly throws an exception with an expired JWT
      */
     @Test
     void testValidateExpired() {
@@ -78,12 +78,12 @@ public class JwtUtilTests {
                 .withIssuedAt(new Date())
                 .sign(algorithm);
 
-        assertThrows(InvalidJwtException.class, () -> jwtUtil.validateToken(testJwt));
+        assertThrows(InvalidJwtException.class, () -> jwtService.validateToken(testJwt));
 
     }
 
     /**
-     * Test that JwtUtil will throw an exception with an invalid JWT
+     * Test that JwtService will throw an exception with an invalid JWT
      */
     @Test
     void testValidateInvalid() {
@@ -95,33 +95,33 @@ public class JwtUtilTests {
                 .withIssuedAt(new Date())
                 .sign(algorithm);
 
-        assertThrows(InvalidJwtException.class, () -> jwtUtil.validateToken(testJwt));
+        assertThrows(InvalidJwtException.class, () -> jwtService.validateToken(testJwt));
 
     }
 
     /**
-     * Test that JwtUtil can successfully extract the username
+     * Test that JwtService can successfully extract the username
      */
     @Test
     void testExtractID() {
 
-        String testJWT = jwtUtil.generateToken(userDetails);
+        String testJWT = jwtService.generateToken(userDetails);
 
         // Assertions
-        assertEquals("Test id", jwtUtil.extractID(testJWT));
+        assertEquals("Test id", jwtService.extractID(testJWT));
 
     }
 
     /**
-     * Test that JwtUtil can successfully extract the authority
+     * Test that JwtService can successfully extract the authority
      */
     @Test
     void testExtractAuthority() {
 
-        String testJWT = jwtUtil.generateToken(userDetails);
+        String testJWT = jwtService.generateToken(userDetails);
 
         // Assertions
-        assertEquals("USER", jwtUtil.extractAuthorities(testJWT).getFirst());
+        assertEquals("USER", jwtService.extractAuthorities(testJWT).getFirst());
 
     }
 
