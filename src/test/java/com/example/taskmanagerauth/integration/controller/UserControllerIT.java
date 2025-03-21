@@ -103,7 +103,11 @@ public class UserControllerIT {
         assertEquals("Success", response.getBody().getMessage());
         assertEquals(HttpStatus.OK.value(), response.getBody().getStatus());
 
-        String testJWT = response.getBody().getData();
+        String testJWT = response.getHeaders().getFirst("Set-Cookie");
+        assertNotNull(testJWT);
+
+        testJWT = testJWT.substring(testJWT.indexOf("=") + 1, testJWT.indexOf(";"));
+
         jwtService.validateToken(testJWT);
 
         assertEquals("1", jwtService.extractID(testJWT));
