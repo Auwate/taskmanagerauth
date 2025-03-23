@@ -2,12 +2,14 @@ package com.example.taskmanagerauth.unit.dto;
 
 import com.example.taskmanagerauth.dto.ApiResponse;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ActiveProfiles("test")
 public class ApiResponseTests {
 
     @Test
