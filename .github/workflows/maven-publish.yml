@@ -63,5 +63,7 @@ jobs:
           -e ORACLE_DB_USER="${{ secrets.ORACLE_DB_USER }}" \
           -e ORACLE_DB_PASSWORD="${{ secrets.ORACLE_DB_PASSWORD }}" \
           -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+          -e P12_LOCATION="${{ secrets.P12_LOCATION }}" \
+          -e P12_PASSWORD="${{ secrets.P12_PASSWORD }}" \
           "${{ secrets.DOCKER_HUB_USER }}"/taskmanagerauth:latest
           sudo docker image prune -f
