@@ -1,15 +1,54 @@
+#spring:
+#  application:
+#    name: taskmanagerauth
+#  datasource:
+#    url: jdbc:oracle:thin:@${ORACLE_DB_CONNECTION_STRING}
+#    username: ${ORACLE_DB_USER}
+#    password: ${ORACLE_DB_PASSWORD}
+#    driver-class-name: oracle.jdbc.OracleDriver
+#  jpa:
+#    database-platform: org.hibernate.dialect.OracleDialect
+#    hibernate:
+#      ddl-auto: none
+#
+## Logging
+#logging:
+#  level:
+#    root: "INFO"
+#  file:
+#    name: "logs/application.log"
+#  pattern:
+#    console: "%d{yyyy-MM-dd HH:mm:ss} [%t] %p %c{36} - %m%n"
+#
+#server:
+#  port: 9095
+#  servlet:
+#    context-path: "/api"
+#  ssl:
+#    key-store: ${P12_LOCATION}
+#    key-store-password: ${P12_PASSWORD}
+#    key-store-type: PKCS12
+#    key-alias: springboot
+#
+#jwt:
+#  secret: ${JWT_SECRET}
+#
+#frontend:
+#  location: ${FRONTEND_LOCATION}
+
 spring:
   application:
-    name: taskmanagerauth
+  name: taskmanagerauth
   datasource:
-    url: jdbc:oracle:thin:@${ORACLE_DB_CONNECTION_STRING}
-    username: ${ORACLE_DB_USER}
-    password: ${ORACLE_DB_PASSWORD}
-    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: # no password
+    driverClassName: org.h2.Driver
   jpa:
-    database-platform: org.hibernate.dialect.OracleDialect
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
+    show-sql: true
 
 # Logging
 logging:
@@ -25,13 +64,13 @@ server:
   servlet:
     context-path: "/api"
   ssl:
-    key-store: ${P12_LOCATION}
-    key-store-password: ${P12_PASSWORD}
+    key-store: "springboot.p12"
+    key-store-password: "admin"
     key-store-type: PKCS12
     key-alias: springboot
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: "Test"
 
 frontend:
-  location: ${FRONTEND_LOCATION}
+  location: "http://localhost:3000"

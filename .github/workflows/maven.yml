@@ -22,5 +22,4 @@ jobs:
       run: |
         chmod 777 ssl_build.sh
         ./ssl_build.sh
-        export JAVA_OPTS="-Djavax.net.ssl.trustStore=truststore.jks -Djavax.net.ssl.trustStorePassword=changeit"
-        mvn -B clean verify $JAVA_OPTS
+        mvn -B clean verify
