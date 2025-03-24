@@ -19,4 +19,6 @@ jobs:
         cache: maven
 
     - name: Test
-      run: mvn -B clean verify
+      run: |
+        ./ssl_build.sh
+        mvn -B clean verify
