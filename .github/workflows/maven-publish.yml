@@ -27,7 +27,11 @@ jobs:
         cache: maven
 
     - name: Build with Maven
-      run: mvn -B clean verify
+      run: |
+        chmod 777 ssl_build.sh
+        ./ssl_build.sh
+        mvn -B clean verify
+
 
   docker-build-push:
     needs: build

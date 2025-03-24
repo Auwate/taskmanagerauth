@@ -20,5 +20,6 @@ jobs:
 
     - name: Test
       run: |
+        chmod 777 ssl_build.sh
         ./ssl_build.sh
         mvn -B clean verify
