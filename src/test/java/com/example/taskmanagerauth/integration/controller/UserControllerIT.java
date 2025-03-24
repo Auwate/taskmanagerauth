@@ -44,7 +44,7 @@ public class UserControllerIT {
     private final PasswordEncodingService passwordEncodingService;
     private final JwtService jwtService;
 
-    private static final String LOGIN_QUERY_URL = "/auth/login";
+    private static final String LOGIN_QUERY_URL = "https://localhost:9095/api/auth/login";
     private static final String REGISTER_QUERY_URL = "/auth/register";
 
     <T> HttpEntity<T> HttpEntityFactory(T data) {
