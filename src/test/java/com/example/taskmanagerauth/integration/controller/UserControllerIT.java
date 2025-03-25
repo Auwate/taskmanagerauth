@@ -15,6 +15,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.web.client.RestTemplate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
@@ -27,7 +28,7 @@ public class UserControllerIT {
 
     @Autowired
     public UserControllerIT(
-            TestRestTemplate testRestTemplate,
+            RestTemplate testRestTemplate,
             UserRepository userRepository,
             PasswordEncodingService passwordEncodingService,
             JwtService jwtService
@@ -38,13 +39,13 @@ public class UserControllerIT {
         this.jwtService = jwtService;
     }
 
-    private final TestRestTemplate testRestTemplate;
+    private final RestTemplate testRestTemplate;
     private final UserRepository userRepository;
     private final PasswordEncodingService passwordEncodingService;
     private final JwtService jwtService;
 
-    private static final String LOGIN_QUERY_URL = "/auth/login";
-    private static final String REGISTER_QUERY_URL = "/auth/register";
+    private static final String LOGIN_QUERY_URL = "https://localhost:9095/api/auth/login";
+    private static final String REGISTER_QUERY_URL = "https://localhost:9095/api/auth/register";
 
     <T> HttpEntity<T> HttpEntityFactory(T data) {
         return new HttpEntity<>(data);

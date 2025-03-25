@@ -3,12 +3,14 @@ package com.example.taskmanagerauth.unit.entity;
 import com.example.taskmanagerauth.entity.Role;
 import com.example.taskmanagerauth.entity.User;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ActiveProfiles("test")
 public class UserTests {
 
     /**
