@@ -18,11 +18,11 @@ public class CorsConfig {
     @Bean
     @Primary
     public CorsConfigurationSource springSecurityCorsConfigurationSource(
-            @Value("FRONTEND.LOCATION") String location
+            @Value("${frontend.location}") String location
     ) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(location));
-        configuration.setAllowedMethods(List.of("GET","POST"));
+        configuration.setAllowedMethods(List.of("GET","POST","OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
@@ -33,14 +33,14 @@ public class CorsConfig {
 
     @Bean
     public WebMvcConfigurer springWebCorsConfiguration(
-            @Value("FRONTEND.LOCATION") String location
+            @Value("${frontend.location}") String location
     ) {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins(location)
-                        .allowedMethods("GET", "POST")
+                        .allowedMethods("GET","POST","OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
