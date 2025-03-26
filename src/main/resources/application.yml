@@ -28,5 +28,5 @@ server:
 jwt:
   secret: ${JWT_SECRET}
 
-frontend:
-  location: ${FRONTEND_LOCATION}
+domain:
+  name: ${DOMAIN_NAME}
