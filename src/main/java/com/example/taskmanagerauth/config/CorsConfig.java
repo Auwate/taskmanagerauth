@@ -18,7 +18,7 @@ public class CorsConfig {
     @Bean
     @Primary
     public CorsConfigurationSource springSecurityCorsConfigurationSource(
-            @Value("${frontend.location}") String location
+            @Value("${domain.name}") String location
     ) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(location));
@@ -33,7 +33,7 @@ public class CorsConfig {
 
     @Bean
     public WebMvcConfigurer springWebCorsConfiguration(
-            @Value("${frontend.location}") String location
+            @Value("${domain.name}") String location
     ) {
         return new WebMvcConfigurer() {
             @Override
