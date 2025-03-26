@@ -34,5 +34,5 @@ server:
 jwt:
   secret: "Test"
 
-frontend:
-  location: "http://localhost:3000"
+domain:
+  name: "http://localhost:9095"
