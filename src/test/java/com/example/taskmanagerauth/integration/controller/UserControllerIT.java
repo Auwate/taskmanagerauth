@@ -1,5 +1,7 @@
 package com.example.taskmanagerauth.integration.controller;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.example.taskmanagerauth.dto.ApiResponse;
 import com.example.taskmanagerauth.entity.Role;
 import com.example.taskmanagerauth.entity.User;
@@ -18,6 +20,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.client.RestTemplate;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -49,6 +54,32 @@ public class UserControllerIT {
 
     <T> HttpEntity<T> HttpEntityFactory(T data) {
         return new HttpEntity<>(data);
+    }
+
+    <T> HttpEntity<T> HttpEntityFactory(T data, HttpHeaders httpHeaders) {
+        return new HttpEntity<>(data, httpHeaders);
+    }
+
+    private String generateToken(String username, List<String> authorities) {
+        Algorithm algorithm = Algorithm.HMAC512("Test");
+        return JWT.create()
+                .withSubject(username)
+                .withClaim("authorities", authorities)
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + 600 * 1000))
+                .sign(algorithm);
+    }
+
+    HttpHeaders httpHeaderFactory() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.COOKIE, "taskmanager_access_token=" + generateToken("1", List.of("USER")));
+        return headers;
+    }
+
+    HttpHeaders invalidHeaderFactory() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.COOKIE, "taskmanager_access_token=" + generateToken("2", List.of("USER")));
+        return headers;
     }
 
     @Test
@@ -111,8 +142,25 @@ public class UserControllerIT {
 
         jwtService.validateToken(testJWT);
 
-        assertEquals("1", jwtService.extractID(testJWT));
+        assertEquals("1", jwtService.extractUser(testJWT));
         assertEquals("USER", jwtService.extractAuthorities(testJWT).getFirst());
+
+    }
+
+    void testValidateSuccess() {
+
+        ResponseEntity<ApiResponse<String>> response = testRestTemplate.exchange(
+                LOGIN_QUERY_URL,
+                HttpMethod.POST,
+                HttpEntityFactory(null, httpHeaderFactory()),
+                new ParameterizedTypeReference<>() {}
+        );
+
+        // Assertions
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Success", response.getBody().getMessage());
+        assertEquals(HttpStatus.OK.value(), response.getBody().getStatus());
 
     }
 

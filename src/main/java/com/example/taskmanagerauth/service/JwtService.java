@@ -50,7 +50,7 @@ public class JwtService {
                 .sign(algorithm);
     }
 
-    public String extractID(String token) {
+    public String extractUser(String token) {
         try {
             DecodedJWT jwt = JWT.decode(token);
             return jwt.getSubject();
