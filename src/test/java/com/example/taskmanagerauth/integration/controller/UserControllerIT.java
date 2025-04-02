@@ -147,6 +147,8 @@ public class UserControllerIT {
 
     }
 
+    @Test
+    @Order(3)
     void testValidateSuccess() {
 
         ResponseEntity<ApiResponse<String>> response = testRestTemplate.exchange(
