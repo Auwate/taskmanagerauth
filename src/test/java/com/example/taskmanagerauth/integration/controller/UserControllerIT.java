@@ -51,6 +51,7 @@ public class UserControllerIT {
 
     private static final String LOGIN_QUERY_URL = "https://localhost:9095/api/auth/login";
     private static final String REGISTER_QUERY_URL = "https://localhost:9095/api/auth/register";
+    private static final String VALIDATE_QUERY_URL = "https://localhost:9095/api/auth/validate";
 
     <T> HttpEntity<T> HttpEntityFactory(T data) {
         return new HttpEntity<>(data);
@@ -152,8 +153,8 @@ public class UserControllerIT {
     void testValidateSuccess() {
 
         ResponseEntity<ApiResponse<String>> response = testRestTemplate.exchange(
-                LOGIN_QUERY_URL,
-                HttpMethod.POST,
+                VALIDATE_QUERY_URL,
+                HttpMethod.GET,
                 HttpEntityFactory(null, httpHeaderFactory()),
                 new ParameterizedTypeReference<>() {}
         );
