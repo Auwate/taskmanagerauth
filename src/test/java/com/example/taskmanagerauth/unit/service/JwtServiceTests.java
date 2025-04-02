@@ -105,12 +105,12 @@ public class JwtServiceTests {
      * Test that JwtService can successfully extract the username
      */
     @Test
-    void testExtractID() {
+    void testExtractUser() {
 
         String testJWT = jwtService.generateToken(userDetails);
 
         // Assertions
-        assertEquals("Test id", jwtService.extractID(testJWT));
+        assertEquals("Test id", jwtService.extractUser(testJWT));
 
     }
 

@@ -1,5 +1,6 @@
 package com.example.taskmanagerauth.config;
 
+
 import com.example.taskmanagerauth.exception.handler.FilterExceptionManager;
 import com.example.taskmanagerauth.exception.server.InvalidJwtException;
 import com.example.taskmanagerauth.exception.server.JwtNotProvidedException;
@@ -9,6 +10,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -32,6 +36,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
         this.exceptionManager = new FilterExceptionManager();
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtRequestFilter.class);
 
     public JwtRequestFilter(
             UserService userService,
@@ -55,43 +61,57 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        if (isPermitAlPath(request.getServletPath())) {
-            filterChain.doFilter(request, response);
+        if (isPermitAllPath(request.getServletPath())) {
+            doFilter(request, response, filterChain);
             return;
         }
 
-        final String authorizationHeader = request.getHeader("Authorization");
+        if (request.getCookies() == null || request.getCookies().length == 0) {
+            exceptionManager.handleJwtNotProvidedException(
+                    new JwtNotProvidedException("No tokens were provided."),
+                    response
+            );
+            return;
+        }
 
-        List<String> authorities = null;
-        String username = null;
-        String jwt;
+        String access_token = null;
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-
+        try {
+            access_token = Arrays.stream(request.getCookies())
+                    .filter(cookie -> cookie.getName().equals("taskmanager_access_token"))
+                    .toList().getFirst().getValue();
+        } catch (Exception exception) {
             exceptionManager.handleJwtNotProvidedException(
                     new JwtNotProvidedException("Access token not provided."),
                     response
             );
-
             return;
-
         }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Access token: {}", access_token);
+        }
+
+        List<String> authorities = null;
+        String username = null;
 
         try {
 
-            jwt = authorizationHeader.substring(7);
+            if (jwtService.validateToken(access_token)) {
 
-            if (jwtService.validateToken(jwt)) {
-                authorities = jwtService.extractAuthorities(jwt);
-                username = jwtService.extractID(jwt);
-            } else {
-                throw new InvalidJwtException("Invalid access token.");
+                authorities = jwtService.extractAuthorities(access_token);
+                username = jwtService.extractUser(access_token);
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Username: {}, Authorities: {}", username, authorities);
+                }
+
             }
 
         } catch (IndexOutOfBoundsException exception) {
 
             exceptionManager.handleJwtNotProvidedException(
-                    new JwtNotProvidedException("Access token not provided."),
+                    new JwtNotProvidedException("Access token is not valid."),
                     response
             );
 
@@ -100,7 +120,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         } catch (InvalidJwtException exception) {
 
             exceptionManager.handleInvalidJwtException(
-                    new InvalidJwtException("Access token is not valid."),
+                    new InvalidJwtException("Access token is invalid or expired."),
                     response
             );
 
@@ -124,13 +144,24 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             // Set the SecurityContextHolder's authentication with the token
             SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 
+            if (logger.isDebugEnabled()) {
+                logger.debug("Authentication: {}", (
+                        (UserDetails) (
+                                SecurityContextHolder
+                                        .getContext()
+                                        .getAuthentication()
+                                        .getPrincipal()
+                        )).getUsername()
+                );
+            }
+
         }
 
         filterChain.doFilter(request, response);
 
     }
 
-    private boolean isPermitAlPath(String servletPath) {
+    private boolean isPermitAllPath(String servletPath) {
         return SecurityConfig.permitAllPaths.contains(servletPath);
     }
 
