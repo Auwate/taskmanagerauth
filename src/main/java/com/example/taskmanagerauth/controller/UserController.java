@@ -26,7 +26,7 @@ public class UserController {
     @Autowired
     private JwtService jwtService;
 
-    @GetMapping
+    @GetMapping("/auth/validate")
     public ResponseEntity<ApiResponse<Void>> validate() {
 
         if (logger.isDebugEnabled()) {
