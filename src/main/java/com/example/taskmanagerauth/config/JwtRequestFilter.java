@@ -105,7 +105,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         try {
 
-            if (jwtService.validateToken(access_token) || jwtService.validate2faToken(access_token)) {
+            if (
+                    cookie_name.equals("taskmanager_access_token") && jwtService.validateToken(access_token) ||
+                    cookie_name.equals("mfa_access_token") && jwtService.validate2faToken(access_token)
+            ) {
 
                 authorities = jwtService.extractAuthorities(access_token);
                 username = jwtService.extractUser(access_token);
