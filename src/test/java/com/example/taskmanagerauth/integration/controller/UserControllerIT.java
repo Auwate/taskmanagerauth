@@ -172,6 +172,9 @@ public class UserControllerIT {
     @Order(3)
     void generateTotp() {
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.COOKIE, "mfa_access_token=" + this.cookie);
+
         ResponseEntity<ApiResponse<String>> response = testRestTemplate.exchange(
                 GENERATE_QUERY_URL,
                 HttpMethod.GET,
