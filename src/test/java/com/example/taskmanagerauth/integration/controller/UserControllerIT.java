@@ -178,7 +178,7 @@ public class UserControllerIT {
         ResponseEntity<ApiResponse<String>> response = testRestTemplate.exchange(
                 GENERATE_QUERY_URL,
                 HttpMethod.GET,
-                HttpEntityFactory(null),
+                HttpEntityFactory(null, headers),
                 new ParameterizedTypeReference<>() {}
         );
 
