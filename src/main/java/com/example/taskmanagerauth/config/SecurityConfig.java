@@ -37,7 +37,8 @@ public class SecurityConfig {
     );
 
     public static List<String> mfaPath = List.of(
-            "/auth/2fa/setup"
+            "/auth/2fa/setup",
+            "/auth/2fa/generate"
     );
 
     @Bean
