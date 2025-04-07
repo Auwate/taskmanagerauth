@@ -27,6 +27,10 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
+  mfa: ${JWT_MFA}
+
+mfa:
+  secret: ${MFA_SECRET}
 
 domain:
   name: ${DOMAIN_NAME}

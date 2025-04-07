@@ -66,6 +66,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return;
         }
 
+        String cookie_name;
+
+        if (isMfaPath(request.getServletPath())) {
+            cookie_name = "mfa_access_token";
+        } else {
+            cookie_name = "taskmanager_access_token";
+        }
+
         if (request.getCookies() == null || request.getCookies().length == 0) {
             exceptionManager.handleJwtNotProvidedException(
                     new JwtNotProvidedException("No tokens were provided."),
@@ -74,11 +82,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return;
         }
 
-        String access_token = null;
+        String access_token;
 
         try {
             access_token = Arrays.stream(request.getCookies())
-                    .filter(cookie -> cookie.getName().equals("taskmanager_access_token"))
+                    .filter(cookie -> cookie.getName().equals(cookie_name))
                     .toList().getFirst().getValue();
         } catch (Exception exception) {
             exceptionManager.handleJwtNotProvidedException(
@@ -97,7 +105,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         try {
 
-            if (jwtService.validateToken(access_token)) {
+            if (jwtService.validateToken(access_token) || jwtService.validate2faToken(access_token)) {
 
                 authorities = jwtService.extractAuthorities(access_token);
                 username = jwtService.extractUser(access_token);
@@ -163,6 +171,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private boolean isPermitAllPath(String servletPath) {
         return SecurityConfig.permitAllPaths.contains(servletPath);
+    }
+
+    private boolean isMfaPath(String servletPath) {
+        return SecurityConfig.mfaPath.contains(servletPath);
     }
 
 }

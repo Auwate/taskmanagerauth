@@ -33,6 +33,10 @@ server:
 
 jwt:
   secret: "Test"
+  mfa: "Test2"
+
+mfa:
+  secret: "CMmRpMMOEmQKWAowdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQWVzR2NtS2V5EiIaILBjvpHue4z0MJuNMpRTZDsvpgvXT5jVNA/1Su8RwTB1GAEQARjJkaTDDiAB"
 
 domain:
   name: "http://localhost:9095"

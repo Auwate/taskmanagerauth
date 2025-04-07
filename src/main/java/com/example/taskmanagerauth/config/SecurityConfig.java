@@ -36,6 +36,10 @@ public class SecurityConfig {
             "/auth/login"
     );
 
+    public static List<String> mfaPath = List.of(
+            "/auth/2fa/setup"
+    );
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource configurationSource) throws Exception {
         http

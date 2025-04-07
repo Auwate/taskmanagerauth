@@ -24,7 +24,7 @@ public class JwtServiceTests {
     @BeforeEach
     void setUp() {
 
-        this.jwtService = new JwtService("Test");
+        this.jwtService = new JwtService("Test","Test2");
 
         this.userDetails = new User(
                 "Test id", // <- ID's are used instead of usernames

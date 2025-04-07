@@ -54,7 +54,7 @@ public class JwtRequestFilterTests {
 
     @BeforeEach
     void setUp() {
-        JwtService jwtService = new JwtService("Test");
+        JwtService jwtService = new JwtService("Test", "Test2");
         this.jwtRequestFilter = new JwtRequestFilter(userService, jwtService, filterExceptionManager);
     }
 

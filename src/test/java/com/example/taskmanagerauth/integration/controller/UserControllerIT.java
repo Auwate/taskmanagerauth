@@ -3,11 +3,18 @@ package com.example.taskmanagerauth.integration.controller;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.example.taskmanagerauth.dto.ApiResponse;
+import com.example.taskmanagerauth.dto.LoginRequest;
+import com.example.taskmanagerauth.dto.RegisterRequest;
+import com.example.taskmanagerauth.entity.Mfa;
 import com.example.taskmanagerauth.entity.Role;
 import com.example.taskmanagerauth.entity.User;
+import com.example.taskmanagerauth.repository.MfaRepository;
 import com.example.taskmanagerauth.repository.UserRepository;
+import com.example.taskmanagerauth.service.MfaService;
 import com.example.taskmanagerauth.service.PasswordEncodingService;
 import com.example.taskmanagerauth.service.JwtService;
+import com.warrenstrange.googleauth.GoogleAuthenticator;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ExtendWith(SpringExtension.class)
@@ -35,23 +41,34 @@ public class UserControllerIT {
     public UserControllerIT(
             RestTemplate testRestTemplate,
             UserRepository userRepository,
+            MfaRepository mfaRepository,
             PasswordEncodingService passwordEncodingService,
-            JwtService jwtService
+            JwtService jwtService,
+            MfaService mfaService
     ) {
         this.testRestTemplate = testRestTemplate;
         this.userRepository = userRepository;
+        this.mfaRepository = mfaRepository;
         this.passwordEncodingService = passwordEncodingService;
         this.jwtService = jwtService;
+        this.mfaService = mfaService;
     }
 
     private final RestTemplate testRestTemplate;
     private final UserRepository userRepository;
+    private final MfaRepository mfaRepository;
     private final PasswordEncodingService passwordEncodingService;
     private final JwtService jwtService;
+    private final MfaService mfaService;
+
+    private String secretKey;
+    private String cookie;
 
     private static final String LOGIN_QUERY_URL = "https://localhost:9095/api/auth/login";
     private static final String REGISTER_QUERY_URL = "https://localhost:9095/api/auth/register";
     private static final String VALIDATE_QUERY_URL = "https://localhost:9095/api/auth/validate";
+    private static final String GENERATE_QUERY_URL = "https://localhost:9095/api/auth/2fa/generate";
+    private static final String SETUP_QUERY_URL = "https://localhost:9095/api/auth/2fa/setup";
 
     <T> HttpEntity<T> HttpEntityFactory(T data) {
         return new HttpEntity<>(data);
@@ -87,10 +104,7 @@ public class UserControllerIT {
     @Order(1)
     void testRegisterSuccess() {
 
-        User payload = new User();
-        payload.setUsername("test_user");
-        payload.setPassword("test_pass");
-        payload.setRoles(Set.of(Role.of("USER")));
+        RegisterRequest payload = new RegisterRequest("test_user", "test_pass");
 
         ResponseEntity<ApiResponse<Void>> response = testRestTemplate.exchange(
                 REGISTER_QUERY_URL,
@@ -106,22 +120,117 @@ public class UserControllerIT {
         assertNull(response.getBody().getData());
         assertEquals(HttpStatus.OK.value(), response.getBody().getStatus());
 
-        // Database
+        // User database assertions
         User databaseUser = userRepository.findAll().getFirst();
 
         assertEquals(payload.getUsername(), databaseUser.getUsername());
         assertTrue(passwordEncodingService.getEncoder().matches(payload.getPassword(), databaseUser.getPassword()));
-        assertEquals(1, payload.getRoles().size());
-        assertEquals("USER", payload.getRoles().stream().findFirst().orElseThrow().getName());
+
+        // Mfa database assertions
+        Mfa databaseMfa = mfaRepository.findAll().getFirst();
+        assertEquals(payload.getUsername(), databaseMfa.getUser().getUsername());
+        assertEquals(false, databaseMfa.getMfaEnabled());
 
     }
 
     @Test
     @Order(2)
+    void testLoginWithoutTotp() {
+
+        LoginRequest payload = new LoginRequest("test_user", "test_pass", "");
+
+        ResponseEntity<ApiResponse<String>> response = testRestTemplate.exchange(
+                LOGIN_QUERY_URL,
+                HttpMethod.POST,
+                HttpEntityFactory(payload),
+                new ParameterizedTypeReference<>() {}
+        );
+
+        // Assertions
+        assertEquals(HttpStatus.TEMPORARY_REDIRECT, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Success", response.getBody().getMessage());
+        assertEquals(362, response.getBody().getStatus());
+
+        // Get cookie
+        String testJWT = response.getHeaders().getFirst("Set-Cookie");
+        assertNotNull(testJWT);
+
+        testJWT = testJWT.substring(testJWT.indexOf("=") + 1, testJWT.indexOf(";"));
+
+        jwtService.validate2faToken(testJWT);
+
+        assertEquals("1", jwtService.extractUser(testJWT));
+        assertEquals("USER", jwtService.extractAuthorities(testJWT).getFirst());
+
+        // For use in next test
+        this.cookie = testJWT;
+
+    }
+
+    @Test
+    @Order(3)
+    void generateTotp() {
+
+        ResponseEntity<ApiResponse<String>> response = testRestTemplate.exchange(
+                GENERATE_QUERY_URL,
+                HttpMethod.GET,
+                HttpEntityFactory(null),
+                new ParameterizedTypeReference<>() {}
+        );
+
+        // Assertions
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Success", response.getBody().getMessage());
+        assertEquals(HttpStatus.OK.value(), response.getBody().getStatus());
+
+        this.secretKey = mfaService.decrypt(mfaRepository.findAll().getFirst().getMfaSecretKey());
+
+        assertEquals(
+                "otpauth://totp/TaskManagerAuth:1?secret=" + secretKey + "&issuer=TaskManagerAuth\n",
+                response.getBody().getData()
+        );
+
+    }
+
+    @Test
+    @Order(4)
+    void setupTotp() {
+
+        GoogleAuthenticator authenticator = new GoogleAuthenticator();
+        String payload = String.valueOf(authenticator.getTotpPassword(secretKey));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.COOKIE, "mfa_access_token=" + this.cookie);
+
+
+        ResponseEntity<ApiResponse<String>> response = testRestTemplate.exchange(
+                SETUP_QUERY_URL,
+                HttpMethod.POST,
+                HttpEntityFactory(payload, headers),
+                new ParameterizedTypeReference<>() {}
+        );
+
+        // Assertions
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Success", response.getBody().getMessage());
+        assertEquals(HttpStatus.OK.value(), response.getBody().getStatus());
+
+        // Database
+        User userDB = userRepository.findAll().getFirst();
+        assertTrue(userDB.getMfa().getMfaEnabled());
+
+    }
+
+    @Test
+    @Order(5)
     void testLoginSuccess() {
 
-        User payload = new User(1L, "test_user", "test_pass");
-        payload.setRoles(Set.of(Role.of("USER")));
+        GoogleAuthenticator authenticator = new GoogleAuthenticator();
+        String totp = String.valueOf(authenticator.getTotpPassword(secretKey));
+        LoginRequest payload = new LoginRequest("test_user", "test_pass", totp);
 
         ResponseEntity<ApiResponse<String>> response = testRestTemplate.exchange(
                 LOGIN_QUERY_URL,
@@ -149,7 +258,7 @@ public class UserControllerIT {
     }
 
     @Test
-    @Order(3)
+    @Order(6)
     void testValidateSuccess() {
 
         ResponseEntity<ApiResponse<String>> response = testRestTemplate.exchange(

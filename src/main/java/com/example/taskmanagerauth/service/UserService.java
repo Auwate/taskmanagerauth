@@ -5,13 +5,14 @@ import com.example.taskmanagerauth.entity.User;
 import com.example.taskmanagerauth.exception.server.InvalidCredentialsException;
 import com.example.taskmanagerauth.exception.server.UsernameTakenException;
 import com.example.taskmanagerauth.repository.UserRepository;
-import com.example.taskmanagerauth.service.JwtService;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -40,6 +41,16 @@ public class UserService implements UserDetailsService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
+    // UserDetail services
+
+    public UserDetails createUserDetails(User user) {
+        return new org.springframework.security.core.userdetails.User(
+                String.valueOf(user.getId()),
+                user.getPassword(),
+                mapRolesToAuthorities(user.getRoles())
+        );
+    }
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
@@ -51,11 +62,7 @@ public class UserService implements UserDetailsService {
                 () -> new UsernameNotFoundException("Invalid credentials provided.")
         );
 
-        return new org.springframework.security.core.userdetails.User(
-                String.valueOf(user.getId()), // Use the immutable ID instead of username
-                user.getPassword(),
-                mapRolesToAuthorities(user.getRoles())
-        );
+        return createUserDetails(user);
 
     }
 
@@ -89,25 +96,71 @@ public class UserService implements UserDetailsService {
 
     }
 
+    public User loadUserByContext() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails)authentication.getPrincipal();
+        Long userId = Long.decode(userDetails.getUsername());
+
+        return userRepository.findById(userId).orElseThrow(
+                () -> new InvalidCredentialsException("User not found.")
+        );
+
+    }
+
     private Collection<? extends GrantedAuthority> mapRolesToAuthorities(Collection<Role> roles) {
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .toList();
     }
 
+    // Retrieve User objects
+
+    public User getUserByUsernameAndPassword(String username, String password) {
+
+        User user = userRepository.findByUsername(username).orElseThrow(
+                () -> new UsernameNotFoundException("Invalid credentials provided.")
+        );
+
+        if (!passwordEncoder.getEncoder().matches(password, user.getPassword())) {
+            throw new InvalidCredentialsException("Invalid credentials provided.");
+        }
+
+        return user;
+
+    }
+
+    public User getUserById(UserDetails userDetails) {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Attempting to retrieve user with id {}", userDetails.getUsername());
+        }
+
+        return userRepository.findById(Long.parseLong(userDetails.getUsername())).orElseThrow(
+                () -> new InvalidCredentialsException("User not found.")
+        );
+
+    }
+
+    public void checkIfUserExists(User user) {
+        userRepository.findByUsername(user.getUsername()).orElseThrow(
+                () -> new UsernameTakenException("A user with this name already exists.")
+        );
+    }
+
+
+
+    // Transactionals
+
     @Transactional
-    public void registerUser(User user) {
+    public void saveUser(User user) {
 
         if (logger.isDebugEnabled()) {
             logger.debug("Attempting to save user {}", user.getUsername());
         }
 
-        if (userRepository.findByUsername(user.getUsername()).isEmpty()) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            userRepository.saveAndFlush(user);
-        } else {
-            throw new UsernameTakenException("Please provide a different username.");
-        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.saveAndFlush(user);
 
     }
 

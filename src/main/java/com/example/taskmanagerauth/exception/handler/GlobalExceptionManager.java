@@ -103,4 +103,64 @@ public class GlobalExceptionManager {
 
     }
 
+    @ExceptionHandler(TotpNotProvidedException.class)
+    public ResponseEntity<ApiResponse<String>> handleTotpNotProvidedException(TotpNotProvidedException exception) {
+
+        String message = "Bad Request: One time password not provided.";
+
+        ApiResponse<String> response = ApiResponse.of(
+                461, // Custom code for requiring TOTP
+                message,
+                exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+
+    }
+
+    @ExceptionHandler(MfaNotEnabledException.class)
+    public ResponseEntity<ApiResponse<String>> handleMfaNotEnabledException(MfaNotEnabledException exception) {
+
+        String message = "Bad Request: Please set up MFA for your account.";
+
+        ApiResponse<String> response = ApiResponse.of(
+                462, // Custom code for requiring TOTP
+                message,
+                exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+
+    }
+
+    @ExceptionHandler(TotpInvalidException.class)
+    public ResponseEntity<ApiResponse<String>> handleTotpInvalidException(TotpInvalidException exception) {
+
+        String message = "Bad Request: One time password was incorrect.";
+
+        ApiResponse<String> response = ApiResponse.of(
+                HttpStatus.FORBIDDEN.value(),
+                message,
+                exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiResponse<String>> handleRuntimeException(RuntimeException exception) {
+
+        String message = "Internal Server Error";
+
+        ApiResponse<String> response = ApiResponse.of(
+                HttpStatus.FORBIDDEN.value(),
+                message,
+                exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+
+    }
+
 }
