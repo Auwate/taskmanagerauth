@@ -127,7 +127,7 @@ public class UserService implements UserDetailsService {
         );
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Attempting password comparison between {} and {}", password, user.getPassword());
+            logger.debug("Attempting password comparison between {} and {}. {} encoded is {}", password, user.getPassword(), password, passwordEncoder.encode(password));
         }
 
         if (!passwordEncoder.getEncoder().matches(password, user.getPassword())) {
