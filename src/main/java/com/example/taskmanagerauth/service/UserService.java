@@ -126,10 +126,6 @@ public class UserService implements UserDetailsService {
                 () -> new UsernameNotFoundException("Invalid credentials provided.")
         );
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Attempting password comparison between {} and {}. {} encoded is {}", password, user.getPassword(), password, passwordEncoder.encode(password));
-        }
-
         if (!passwordEncoder.getEncoder().matches(password, user.getPassword())) {
             throw new InvalidCredentialsException("Invalid credentials provided.");
         }
@@ -164,7 +160,7 @@ public class UserService implements UserDetailsService {
     public void saveUser(User user) {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Attempting to save user {}", user.getUsername());
+            logger.debug("Attempting to save user {} with pass {}", user.getUsername(), user.getPassword());
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
