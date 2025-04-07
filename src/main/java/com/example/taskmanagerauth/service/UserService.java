@@ -118,9 +118,17 @@ public class UserService implements UserDetailsService {
 
     public User getUserByUsernameAndPassword(String username, String password) {
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("Attempting getUserByUsernameAndPassword with {}", username);
+        }
+
         User user = userRepository.findByUsername(username).orElseThrow(
                 () -> new UsernameNotFoundException("Invalid credentials provided.")
         );
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Attempting password comparison between {} and {}", password, user.getPassword());
+        }
 
         if (!passwordEncoder.getEncoder().matches(password, user.getPassword())) {
             throw new InvalidCredentialsException("Invalid credentials provided.");
