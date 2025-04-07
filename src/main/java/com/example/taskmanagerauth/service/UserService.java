@@ -143,9 +143,9 @@ public class UserService implements UserDetailsService {
     }
 
     public void checkIfUserExists(User user) {
-        userRepository.findByUsername(user.getUsername()).orElseThrow(
-                () -> new UsernameTakenException("A user with this name already exists.")
-        );
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new UsernameTakenException("A user with this name already exists.");
+        }
     }
 
 
