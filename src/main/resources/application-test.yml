@@ -15,7 +15,7 @@ spring:
 # Logging
 logging:
   level:
-    root: "INFO"
+    root: "DEBUG"
   file:
     name: "logs/application.log"
   pattern:
