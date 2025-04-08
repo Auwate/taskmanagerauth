@@ -1,6 +1,6 @@
 package com.example.taskmanagerauth.unit.dto;
 
-import com.example.taskmanagerauth.dto.ApiResponse;
+import com.example.taskmanagerauth.dto.impl.ApiResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ActiveProfiles;
 

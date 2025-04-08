@@ -1,4 +1,4 @@
-package com.example.taskmanagerauth.dto;
+package com.example.taskmanagerauth.dto.impl;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 

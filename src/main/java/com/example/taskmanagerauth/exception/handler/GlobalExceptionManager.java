@@ -1,7 +1,8 @@
 package com.example.taskmanagerauth.exception.handler;
 
-import com.example.taskmanagerauth.dto.ApiResponse;
+import com.example.taskmanagerauth.dto.impl.ApiResponse;
 import com.example.taskmanagerauth.exception.server.*;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -109,27 +110,27 @@ public class GlobalExceptionManager {
         String message = "Bad Request: One time password not provided.";
 
         ApiResponse<String> response = ApiResponse.of(
-                461, // Custom code for requiring TOTP
-                message,
-                exception.getMessage()
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-
-    }
-
-    @ExceptionHandler(MfaNotEnabledException.class)
-    public ResponseEntity<ApiResponse<String>> handleMfaNotEnabledException(MfaNotEnabledException exception) {
-
-        String message = "Bad Request: Please set up MFA for your account.";
-
-        ApiResponse<String> response = ApiResponse.of(
                 462, // Custom code for requiring TOTP
                 message,
                 exception.getMessage()
         );
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
+    @ExceptionHandler(MfaNotEnabledException.class)
+    public ResponseEntity<ApiResponse<String>> handleMfaNotEnabledException(MfaNotEnabledException exception, HttpServletResponse response) {
+
+        String message = "Bad Request: Please set up MFA for your account.";
+
+        ApiResponse<String> apiResponse = ApiResponse.of(
+                362, // Custom code for requiring TOTP
+                message,
+                exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
 
     }
 

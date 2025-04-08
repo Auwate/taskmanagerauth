@@ -1,8 +1,12 @@
 package com.example.taskmanagerauth.controller;
 
-import com.example.taskmanagerauth.dto.ApiResponse;
-import com.example.taskmanagerauth.dto.LoginRequest;
-import com.example.taskmanagerauth.dto.RegisterRequest;
+import com.example.taskmanagerauth.dto.impl.ApiResponse;
+import com.example.taskmanagerauth.dto.impl.LoginRequest;
+import com.example.taskmanagerauth.dto.impl.RegisterRequest;
+import com.example.taskmanagerauth.dto.responses.LoginResult;
+import com.example.taskmanagerauth.dto.responses.MfaRequired;
+import com.example.taskmanagerauth.dto.responses.Success;
+import com.example.taskmanagerauth.dto.responses.TotpRequired;
 import com.example.taskmanagerauth.entity.User;
 import com.example.taskmanagerauth.service.MfaService;
 import com.example.taskmanagerauth.service.UserService;
@@ -91,46 +95,54 @@ public class UserController {
 
         logger.info("POST HTTP request received at /api/auth/login");
 
-        // Load user
-        User user = userService.getUserByUsernameAndPassword(loginRequest.getUsername(), loginRequest.getPassword());
-        UserDetails userDetails = userService.createUserDetails(user);
+        // Process user
+        LoginResult result = userService.login(loginRequest);
 
-        // Check if user has 2fa set up
-        if (!mfaService.hasMfaEnabled(user)) {
+        return switch (result) {
+            case Success success -> {
+                httpServletResponse.addCookie(
+                        jwtService.generateJwtCookie(
+                                success.userDetails()
+                        )
+                );
+                yield ResponseEntity.status(HttpStatus.OK).body(
+                        ApiResponse.of(
+                                HttpStatus.OK.value(),
+                                "Success",
+                                null
+                        )
+                );
+            }
+            case MfaRequired mfa -> {
+                httpServletResponse.addCookie(
+                        jwtService.generate2faCookie(
+                                mfa.userDetails()
+                        )
+                );
+                yield ResponseEntity.status(HttpStatus.OK).body(
+                        ApiResponse.of(
+                                362,
+                                "Please enable mfa.",
+                                null
+                        )
+                );
+            }
+            case TotpRequired totp -> {
+                httpServletResponse.addCookie(
+                        jwtService.generate2faCookie(
+                                totp.userDetails()
+                        )
+                );
+                yield ResponseEntity.status(HttpStatus.OK).body(
+                        ApiResponse.of(
+                                462,
+                                "TOTP not provided.",
+                                null
+                        )
+                );
+            }
 
-            httpServletResponse.addCookie(
-                    jwtService.generate2faCookie(
-                            userDetails
-                    )
-            );
-
-            ApiResponse<Void> response = ApiResponse.of(
-                    362, // Custom code for requiring TOTP,
-                    "Success",
-                    null
-            );
-
-            return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT).body(response);
-
-        }
-
-        // Check TOTP
-        mfaService.validatePassword(loginRequest.getTotp(), user);
-
-        // Create access token cookie
-        httpServletResponse.addCookie(
-            jwtService.generateJwtCookie(
-                userDetails
-            )
-        );
-
-        ApiResponse<Void> response = ApiResponse.of(
-                HttpStatus.OK.value(),
-                "Success",
-                null
-        );
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        };
 
     }
 

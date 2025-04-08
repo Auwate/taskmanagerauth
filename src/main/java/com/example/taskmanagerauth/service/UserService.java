@@ -1,9 +1,13 @@
 package com.example.taskmanagerauth.service;
 
+import com.example.taskmanagerauth.dto.impl.LoginRequest;
+import com.example.taskmanagerauth.dto.responses.LoginResult;
+import com.example.taskmanagerauth.dto.responses.MfaRequired;
+import com.example.taskmanagerauth.dto.responses.Success;
+import com.example.taskmanagerauth.dto.responses.TotpRequired;
 import com.example.taskmanagerauth.entity.Role;
 import com.example.taskmanagerauth.entity.User;
-import com.example.taskmanagerauth.exception.server.InvalidCredentialsException;
-import com.example.taskmanagerauth.exception.server.UsernameTakenException;
+import com.example.taskmanagerauth.exception.server.*;
 import com.example.taskmanagerauth.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -26,20 +30,38 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncodingService passwordEncoder;
-    private final JwtService jwtService;
+    private final MfaService mfaService;
 
     @Autowired
     public UserService(
             UserRepository userRepository,
             PasswordEncodingService passwordEncoder,
-            JwtService jwtService
+            MfaService mfaService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
+        this.mfaService = mfaService;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
+    // Wrapper methods
+
+    public LoginResult login(LoginRequest loginRequest) {
+
+        User user = getUserByUsernameAndPassword(loginRequest.getUsername(), loginRequest.getPassword());
+        UserDetails userDetails = createUserDetails(user);
+
+        try {
+            mfaService.validatePassword(loginRequest.getTotp(), user);
+            return new Success(userDetails);
+        } catch (MfaNotEnabledException exception) {
+            return new MfaRequired(userDetails);
+        } catch (TotpNotProvidedException exception) {
+            return new TotpRequired(userDetails);
+        }
+
+    }
 
     // UserDetail services
 

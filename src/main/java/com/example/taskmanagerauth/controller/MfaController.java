@@ -1,6 +1,8 @@
 package com.example.taskmanagerauth.controller;
 
-import com.example.taskmanagerauth.dto.ApiResponse;
+import com.example.taskmanagerauth.dto.impl.ApiResponse;
+import com.example.taskmanagerauth.dto.impl.MfaRequest;
+import com.example.taskmanagerauth.entity.User;
 import com.example.taskmanagerauth.service.MfaService;
 import com.example.taskmanagerauth.service.UserService;
 import org.slf4j.Logger;
@@ -25,7 +27,7 @@ public class MfaController {
     private static final Logger logger = LoggerFactory.getLogger(MfaController.class);
 
     @PostMapping("/auth/2fa/setup")
-    public ResponseEntity<ApiResponse<Void>> setup(@RequestBody String totp) {
+    public ResponseEntity<ApiResponse<Void>> setup(@RequestBody MfaRequest mfaRequest) {
 
         if (logger.isDebugEnabled()) {
             logger.debug("2FA trying to be enabled.");
@@ -33,7 +35,10 @@ public class MfaController {
 
         logger.info("POST HTTP request received at /api/auth/2fa/setup");
 
-        mfaService.setupMfa(totp, userService.createUserDetails(userService.loadUserByContext()));
+        User user = userService.loadUserByContext();
+
+        mfaService.setupMfa(mfaRequest.getTotp(), user);
+        userService.saveUser(user);
 
         ApiResponse<Void> response = ApiResponse.of(
                 HttpStatus.OK.value(),
@@ -57,7 +62,7 @@ public class MfaController {
         ApiResponse<String> response = ApiResponse.of(
                 HttpStatus.OK.value(),
                 "Success",
-                mfaService.generateMfaCode()
+                mfaService.generateMfaCode(userService.loadUserByContext())
         );
 
         return ResponseEntity.status(HttpStatus.OK).body(response);

@@ -2,9 +2,9 @@ package com.example.taskmanagerauth.integration.controller;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.example.taskmanagerauth.dto.ApiResponse;
-import com.example.taskmanagerauth.dto.LoginRequest;
-import com.example.taskmanagerauth.dto.RegisterRequest;
+import com.example.taskmanagerauth.dto.impl.ApiResponse;
+import com.example.taskmanagerauth.dto.impl.LoginRequest;
+import com.example.taskmanagerauth.dto.impl.RegisterRequest;
 import com.example.taskmanagerauth.entity.Mfa;
 import com.example.taskmanagerauth.entity.User;
 import com.example.taskmanagerauth.repository.MfaRepository;
@@ -145,7 +145,7 @@ public class UserControllerIT {
         );
 
         // Assertions
-        assertEquals(HttpStatus.TEMPORARY_REDIRECT, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("Success", response.getBody().getMessage());
         assertEquals(362, response.getBody().getStatus());

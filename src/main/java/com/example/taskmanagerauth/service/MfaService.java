@@ -11,7 +11,6 @@ import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -23,17 +22,13 @@ import java.util.Base64;
 @Service
 public class MfaService {
 
-    private final UserService userService;
-
     private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
     private final KeysetHandle mfaKey;
 
     @Autowired
     public MfaService(
-            @Value("${mfa.secret}") String mfaSecretKeySet,
-            UserService userService
+            @Value("${mfa.secret}") String mfaSecretKeySet
     ) {
-        this.userService = userService;
         mfaKey = getMfaKey(mfaSecretKeySet);
     }
 
@@ -135,11 +130,8 @@ public class MfaService {
      * Generate the TOTP code for usage on frontend
      * @return (String) The otpauth code
      */
-    public String generateMfaCode() {
-
-        User user = userService.loadUserByContext();
+    public String generateMfaCode(User user) {
         return "otpauth://totp/TaskManagerAuth:" + user.getId() + "?secret=" + decrypt(user.getMfa().getMfaSecretKey()) + "&issuer=TaskManagerAuth\n";
-
     }
 
     /**
@@ -149,15 +141,15 @@ public class MfaService {
      */
     public void validatePassword(String totp, User user) {
 
+        if (!hasMfaEnabled(user)) {
+            throw new MfaNotEnabledException("Mfa not enabled.");
+        }
+
         if (totp.isEmpty()) {
             throw new TotpNotProvidedException("Please provide a TOTP code.");
         }
 
         int totp_num = getTotp(totp);
-
-        if (!hasMfaEnabled(user)) {
-            throw new MfaNotEnabledException("Mfa not enabled.");
-        }
 
         if (!authenticator.authorize(decrypt(user.getMfa().getMfaSecretKey()), totp_num)) {
             throw new TotpInvalidException("Incorrect TOTP provided.");
@@ -168,20 +160,17 @@ public class MfaService {
     /**
      * Using a TOTP code the user provides, activate the user's MFA if correct
      * @param totp Code provided
-     * @param userDetails The user
+     * @param user The user
      */
-    public void setupMfa(String totp, UserDetails userDetails) {
+    public void setupMfa(String totp, User user) {
 
         int totp_num = getTotp(totp);
-        User user = userService.getUserById(userDetails);
 
         if (!authenticator.authorize(decrypt(user.getMfa().getMfaSecretKey()), totp_num)) {
             throw new TotpInvalidException("Incorrect TOTP provided.");
         }
 
         user.getMfa().setMfaEnabled(true);
-
-        userService.saveUser(user);
 
     }
 
