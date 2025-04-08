@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.example.taskmanagerauth.dto.impl.ApiResponse;
 import com.example.taskmanagerauth.dto.impl.LoginRequest;
+import com.example.taskmanagerauth.dto.impl.MfaRequest;
 import com.example.taskmanagerauth.dto.impl.RegisterRequest;
 import com.example.taskmanagerauth.entity.Mfa;
 import com.example.taskmanagerauth.entity.User;
@@ -200,7 +201,7 @@ public class UserControllerIT {
     void setupTotp() {
 
         GoogleAuthenticator authenticator = new GoogleAuthenticator();
-        String payload = String.valueOf(authenticator.getTotpPassword(secretKey));
+        MfaRequest payload = new MfaRequest(String.valueOf(authenticator.getTotpPassword(secretKey)));
 
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.COOKIE, "mfa_access_token=" + this.cookie);
