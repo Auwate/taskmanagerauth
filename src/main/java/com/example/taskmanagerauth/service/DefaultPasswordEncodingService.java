@@ -14,6 +14,10 @@ public class DefaultPasswordEncodingService implements PasswordEncodingService {
         return passwordEncoder.encode(password);
     }
 
+    public Boolean matches(String rawPassword, String encoded) {
+        return passwordEncoder.matches(rawPassword, encoded);
+    }
+
     public PasswordEncoder getEncoder() {
         return passwordEncoder;
     }

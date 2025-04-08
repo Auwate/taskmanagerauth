@@ -126,7 +126,11 @@ public class UserService implements UserDetailsService {
                 () -> new UsernameNotFoundException("Invalid credentials provided.")
         );
 
-        if (!passwordEncoder.getEncoder().matches(password, user.getPassword())) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("{} {} compared with {} {}", username, password, user.getUsername(), user.getPassword());
+        }
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new InvalidCredentialsException("Invalid credentials provided.");
         }
 
