@@ -1,14 +1,12 @@
 package com.example.taskmanagerauth.exception.handler;
 
-import com.example.taskmanagerauth.dto.ApiResponse;
+import com.example.taskmanagerauth.dto.impl.ApiResponse;
 import com.example.taskmanagerauth.exception.server.ExpiredJwtException;
 import com.example.taskmanagerauth.exception.server.InvalidCredentialsException;
 import com.example.taskmanagerauth.exception.server.InvalidJwtException;
 import com.example.taskmanagerauth.exception.server.JwtNotProvidedException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

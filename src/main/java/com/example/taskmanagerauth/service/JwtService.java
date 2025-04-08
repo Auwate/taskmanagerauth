@@ -21,11 +21,16 @@ import java.util.List;
 @Component
 public class JwtService {
 
-    public JwtService(@Value("${jwt.secret}") String secret) {
+    public JwtService(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.mfa}") String secret2FA
+    ) {
         this.secret = secret;
+        this.secret2FA = secret2FA;
     }
 
     private final String secret;
+    private final String secret2FA;
     private final Duration EXPIRATION_TIMER = Duration.ofMinutes(10); // 10 minutes
 
     public long getExpirationTimerInMillis() {
@@ -40,14 +45,27 @@ public class JwtService {
         return secret;
     }
 
-    public String generateToken(UserDetails userDetails) {
-        Algorithm algorithm = Algorithm.HMAC512(getSecret());
+    public String getSecret2FA() {
+        return secret2FA;
+    }
+
+    private String createToken(UserDetails userDetails, Algorithm algorithm) {
         return JWT.create()
                 .withSubject(userDetails.getUsername())
                 .withClaim("authorities", userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + getExpirationTimerInMillis()))
                 .sign(algorithm);
+    }
+
+    public String generateToken(UserDetails userDetails) {
+        Algorithm algorithm = Algorithm.HMAC512(getSecret());
+        return createToken(userDetails, algorithm);
+    }
+
+    public String generate2FAToken(UserDetails userDetails) {
+        Algorithm algorithm = Algorithm.HMAC512(getSecret2FA());
+        return createToken(userDetails, algorithm);
     }
 
     public String extractUser(String token) {
@@ -68,9 +86,17 @@ public class JwtService {
         }
     }
 
+    public boolean validate2faToken(String token) {
+        return validate(token, getSecret2FA());
+    }
+
     public boolean validateToken(String token) {
+        return validate(token, getSecret());
+    }
+
+    private boolean validate(String token, String secret) {
         try {
-            Algorithm algorithm = Algorithm.HMAC512(getSecret());
+            Algorithm algorithm = Algorithm.HMAC512(secret);
 
             JWTVerifier verifier = JWT.require(algorithm)
                     .build();
@@ -86,10 +112,20 @@ public class JwtService {
     }
 
     public Cookie generateJwtCookie(UserDetails userDetails) {
+        String jwt = generateToken(userDetails);
+        return createCookie("taskmanager_access_token", jwt);
+    }
+
+    public Cookie generate2faCookie(UserDetails userDetails) {
+        String jwt = generate2FAToken(userDetails);
+        return createCookie("mfa_access_token", jwt);
+    }
+
+    private Cookie createCookie(String cookie_name, String jwt) {
 
         Cookie cookie = new Cookie(
-                "taskmanager_access_token",
-                generateToken(userDetails)
+                cookie_name,
+                jwt
         );
 
         cookie.setHttpOnly(true);

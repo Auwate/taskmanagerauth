@@ -1,7 +1,14 @@
 package com.example.taskmanagerauth.controller;
 
-import com.example.taskmanagerauth.dto.ApiResponse;
+import com.example.taskmanagerauth.dto.impl.ApiResponse;
+import com.example.taskmanagerauth.dto.impl.LoginRequest;
+import com.example.taskmanagerauth.dto.impl.RegisterRequest;
+import com.example.taskmanagerauth.dto.responses.LoginResult;
+import com.example.taskmanagerauth.dto.responses.MfaRequired;
+import com.example.taskmanagerauth.dto.responses.Success;
+import com.example.taskmanagerauth.dto.responses.TotpRequired;
 import com.example.taskmanagerauth.entity.User;
+import com.example.taskmanagerauth.service.MfaService;
 import com.example.taskmanagerauth.service.UserService;
 import com.example.taskmanagerauth.service.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +33,9 @@ public class UserController {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private MfaService mfaService;
 
     @GetMapping("/auth/validate")
     public ResponseEntity<ApiResponse<Void>> validate() {
@@ -46,7 +57,9 @@ public class UserController {
     }
 
     @PostMapping("/auth/register")
-    public ResponseEntity<ApiResponse<Void>> register(@RequestBody User user) {
+    public ResponseEntity<ApiResponse<Void>> register(
+            @RequestBody RegisterRequest registerRequest
+    ) {
 
         if (logger.isDebugEnabled()) {
             logger.debug("Attempting to register...");
@@ -54,7 +67,11 @@ public class UserController {
 
         logger.info("POST HTTP request received at /api/auth/register");
 
-        userService.registerUser(user);
+        User user = userService.createDatabaseUser(registerRequest.getUsername(), registerRequest.getPassword());
+
+        userService.checkIfUserExists(user);
+        mfaService.instantiateMfaForUser(user);
+        userService.saveUser(user);
 
         ApiResponse<Void> response = ApiResponse.of(
                 HttpStatus.OK.value(),
@@ -67,8 +84,8 @@ public class UserController {
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<ApiResponse<Void>> authenticate(
-            @RequestBody User user,
+    public ResponseEntity<ApiResponse<Void>> login(
+            @RequestBody LoginRequest loginRequest,
             HttpServletResponse httpServletResponse
     ) {
 
@@ -78,21 +95,54 @@ public class UserController {
 
         logger.info("POST HTTP request received at /api/auth/login");
 
-        httpServletResponse.addCookie(
-            jwtService.generateJwtCookie(
-                userService.loadUserByUsernamePassword(
-                    user.getUsername(), user.getPassword()
-                )
-            )
-        );
+        // Process user
+        LoginResult result = userService.login(loginRequest);
 
-        ApiResponse<Void> response = ApiResponse.of(
-                HttpStatus.OK.value(),
-                "Success",
-                null
-        );
+        return switch (result) {
+            case Success success -> {
+                httpServletResponse.addCookie(
+                        jwtService.generateJwtCookie(
+                                success.userDetails()
+                        )
+                );
+                yield ResponseEntity.status(HttpStatus.OK).body(
+                        ApiResponse.of(
+                                HttpStatus.OK.value(),
+                                "Success",
+                                null
+                        )
+                );
+            }
+            case MfaRequired mfa -> {
+                httpServletResponse.addCookie(
+                        jwtService.generate2faCookie(
+                                mfa.userDetails()
+                        )
+                );
+                yield ResponseEntity.status(HttpStatus.OK).body(
+                        ApiResponse.of(
+                                362,
+                                "Please enable mfa.",
+                                null
+                        )
+                );
+            }
+            case TotpRequired totp -> {
+                httpServletResponse.addCookie(
+                        jwtService.generate2faCookie(
+                                totp.userDetails()
+                        )
+                );
+                yield ResponseEntity.status(HttpStatus.OK).body(
+                        ApiResponse.of(
+                                462,
+                                "TOTP not provided.",
+                                null
+                        )
+                );
+            }
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        };
 
     }
 

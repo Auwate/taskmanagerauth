@@ -1,5 +1,6 @@
 package com.example.taskmanagerauth.unit.entity;
 
+import com.example.taskmanagerauth.entity.Mfa;
 import com.example.taskmanagerauth.entity.Role;
 import com.example.taskmanagerauth.entity.User;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ public class UserTests {
 
         // Creation
         User testUser = new User();
+        Mfa mfa = Mfa.of(testUser, true, "Test");
 
         // Setters
         testUser.setId(1L);
@@ -30,6 +32,7 @@ public class UserTests {
         testUser.setRoles(Set.of(Role.of("USER")));
         testUser.setUsername("Test username");
         testUser.setLastAccessedAt(LocalDateTime.of(2000, 12, 30, 12, 30, 45));
+        testUser.setMfa(mfa);
 
         // Getters
         assertEquals(1L, testUser.getId());
@@ -37,6 +40,8 @@ public class UserTests {
         assertEquals("USER", testUser.getRoles().stream().findFirst().orElseThrow().getName());
         assertEquals("Test username", testUser.getUsername());
         assertEquals(LocalDateTime.of(2000, 12, 30, 12, 30, 45), testUser.getLastAccessedAt());
+        assertEquals(true, testUser.getMfa().getMfaEnabled());
+        assertEquals("Test", testUser.getMfa().getMfaSecretKey());
 
     }
 

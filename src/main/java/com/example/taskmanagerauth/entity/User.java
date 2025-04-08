@@ -1,5 +1,6 @@
 package com.example.taskmanagerauth.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -32,12 +33,27 @@ public class User {
     )
     private Set<Role> roles;
 
+    @OneToOne(fetch = FetchType.EAGER, mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private Mfa mfa;
+
     public User() {}
 
     public User(Long id, String username, String password) {
         this.id = id;
         this.username = username;
         this.password = password;
+    }
+
+    public User(Long id, String username, String password, Set<Role> roles) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.roles = roles;
+    }
+
+    public static User of(String username, String password) {
+        return new User(null, username, password, Set.of(Role.of("USER")));
     }
 
     public Long getId() {
@@ -75,5 +91,9 @@ public class User {
     public Set<Role> getRoles() { return roles; }
 
     public void setRoles(Set<Role> roles) { this.roles = roles; }
+
+    public Mfa getMfa() { return mfa; }
+
+    public void setMfa(Mfa mfa) { this.mfa = mfa; }
 
 }

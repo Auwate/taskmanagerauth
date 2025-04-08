@@ -9,7 +9,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.OracleDialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
 
 # Logging
 logging:
@@ -27,6 +27,10 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
+  mfa: ${JWT_MFA}
+
+mfa:
+  secret: ${MFA_SECRET}
 
 domain:
   name: ${DOMAIN_NAME}

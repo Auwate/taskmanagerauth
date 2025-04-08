@@ -1,6 +1,6 @@
 package com.example.taskmanagerauth.exception.handler;
 
-import com.example.taskmanagerauth.dto.ApiResponse;
+import com.example.taskmanagerauth.dto.impl.ApiResponse;
 import com.example.taskmanagerauth.exception.server.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -100,6 +100,66 @@ public class GlobalExceptionManager {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+
+    }
+
+    @ExceptionHandler(TotpNotProvidedException.class)
+    public ResponseEntity<ApiResponse<String>> handleTotpNotProvidedException(TotpNotProvidedException exception) {
+
+        String message = "Bad Request: One time password not provided.";
+
+        ApiResponse<String> response = ApiResponse.of(
+                462, // Custom code for requiring TOTP
+                message,
+                exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
+    @ExceptionHandler(MfaNotEnabledException.class)
+    public ResponseEntity<ApiResponse<String>> handleMfaNotEnabledException(MfaNotEnabledException exception) {
+
+        String message = "Bad Request: Please set up MFA for your account.";
+
+        ApiResponse<String> apiResponse = ApiResponse.of(
+                362, // Custom code for requiring TOTP
+                message,
+                exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+    }
+
+    @ExceptionHandler(TotpInvalidException.class)
+    public ResponseEntity<ApiResponse<String>> handleTotpInvalidException(TotpInvalidException exception) {
+
+        String message = "Bad Request: One time password was incorrect.";
+
+        ApiResponse<String> response = ApiResponse.of(
+                HttpStatus.FORBIDDEN.value(),
+                message,
+                exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiResponse<String>> handleRuntimeException(RuntimeException exception) {
+
+        String message = "Internal Server Error";
+
+        ApiResponse<String> response = ApiResponse.of(
+                HttpStatus.FORBIDDEN.value(),
+                message,
+                exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 
     }
 
