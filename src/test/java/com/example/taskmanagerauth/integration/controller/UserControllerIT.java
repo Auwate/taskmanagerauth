@@ -147,7 +147,7 @@ public class UserControllerIT {
         // Assertions
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals("Success", response.getBody().getMessage());
+        assertEquals("Please enable mfa.", response.getBody().getMessage());
         assertEquals(362, response.getBody().getStatus());
 
         // Get cookie

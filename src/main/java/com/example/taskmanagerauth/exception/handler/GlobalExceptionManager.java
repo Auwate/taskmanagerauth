@@ -2,7 +2,6 @@ package com.example.taskmanagerauth.exception.handler;
 
 import com.example.taskmanagerauth.dto.impl.ApiResponse;
 import com.example.taskmanagerauth.exception.server.*;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -120,7 +119,7 @@ public class GlobalExceptionManager {
     }
 
     @ExceptionHandler(MfaNotEnabledException.class)
-    public ResponseEntity<ApiResponse<String>> handleMfaNotEnabledException(MfaNotEnabledException exception, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<String>> handleMfaNotEnabledException(MfaNotEnabledException exception) {
 
         String message = "Bad Request: Please set up MFA for your account.";
 
