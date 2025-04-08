@@ -63,7 +63,7 @@ public class UserController {
 
         logger.info("POST HTTP request received at /api/auth/register");
 
-        User user = User.of(registerRequest.getUsername(), registerRequest.getPassword());
+        User user = userService.createDatabaseUser(registerRequest.getUsername(), registerRequest.getPassword());
 
         userService.checkIfUserExists(user);
         mfaService.instantiateMfaForUser(user);

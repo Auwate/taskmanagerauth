@@ -6,7 +6,6 @@ import com.example.taskmanagerauth.dto.ApiResponse;
 import com.example.taskmanagerauth.dto.LoginRequest;
 import com.example.taskmanagerauth.dto.RegisterRequest;
 import com.example.taskmanagerauth.entity.Mfa;
-import com.example.taskmanagerauth.entity.Role;
 import com.example.taskmanagerauth.entity.User;
 import com.example.taskmanagerauth.repository.MfaRepository;
 import com.example.taskmanagerauth.repository.UserRepository;
@@ -14,12 +13,10 @@ import com.example.taskmanagerauth.service.MfaService;
 import com.example.taskmanagerauth.service.PasswordEncodingService;
 import com.example.taskmanagerauth.service.JwtService;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
@@ -125,7 +122,7 @@ public class UserControllerIT {
         User databaseUser = userRepository.findAll().getFirst();
 
         assertEquals(payload.getUsername(), databaseUser.getUsername());
-        assertTrue(passwordEncodingService.getEncoder().matches(payload.getPassword(), databaseUser.getPassword()));
+        assertTrue(passwordEncodingService.matches(payload.getPassword(), databaseUser.getPassword()));
 
         // Mfa database assertions
         Mfa databaseMfa = mfaRepository.findAll().getFirst();

@@ -116,6 +116,10 @@ public class UserService implements UserDetailsService {
 
     // Retrieve User objects
 
+    public User createDatabaseUser(String username, String password) {
+        return User.of(username, passwordEncoder.encode(password));
+    }
+
     public User getUserByUsernameAndPassword(String username, String password) {
 
         if (logger.isDebugEnabled()) {
@@ -125,10 +129,6 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByUsername(username).orElseThrow(
                 () -> new UsernameNotFoundException("Invalid credentials provided.")
         );
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("{} {} compared with {} {}", username, password, user.getUsername(), user.getPassword());
-        }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new InvalidCredentialsException("Invalid credentials provided.");
@@ -156,18 +156,15 @@ public class UserService implements UserDetailsService {
         }
     }
 
-
-
     // Transactionals
 
     @Transactional
     public void saveUser(User user) {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Attempting to save user {} with pass {}", user.getUsername(), user.getPassword());
+            logger.debug("Attempting to save user {}", user.getUsername());
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.saveAndFlush(user);
 
     }
